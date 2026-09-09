@@ -1,9 +1,8 @@
-node_modules/
-.next/
-out/
+.git
+.next
+node_modules
 .env*
 !.env.example
-!.env.docker.example
 *.log
 *.tsbuildinfo
 .DS_Store
