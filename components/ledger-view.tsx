@@ -22,7 +22,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createEntry, deleteEntry, updateEntry } from "@/app/[id]/actions";
 import {
   EXPENSE_CATEGORIES,
@@ -105,6 +105,19 @@ export function LedgerView({ ledgerId, month, previousMonth, nextMonth, entries,
   const [pickerYear, setPickerYear] = useState(Number(month.slice(0, 4)));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const events = new EventSource(`/${ledgerId}/events`);
+    const refresh = () => router.refresh();
+    const refreshWhenVisible = () => document.visibilityState === "visible" && refresh();
+    events.addEventListener("change", refresh);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      events.close();
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [ledgerId, router]);
 
   const groups = useMemo(() => {
     const result = new Map<string, Entry[]>();

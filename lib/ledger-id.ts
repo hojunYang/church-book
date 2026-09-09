@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 
+export const LEDGER_CHANGES_CHANNEL = "ledger_changes";
+
 export function ledgerIdToUuid(ledgerId: string) {
   const bytes = createHash("sha256").update(`church-book:${ledgerId}`).digest().subarray(0, 16);
   bytes[6] = (bytes[6] & 0x0f) | 0x50;

@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { isLedgerId, isUuid, validateEntryDraft, type EntryDraft } from "@/lib/ledger";
-import { ledgerIdToUuid } from "@/lib/ledger-id";
+import { LEDGER_CHANGES_CHANNEL, ledgerIdToUuid } from "@/lib/ledger-id";
 
 export type ActionResult = { ok: true } | { ok: false; message: string };
 
@@ -23,10 +23,13 @@ export async function createEntry(ledgerId: string, input: EntryDraft): Promise<
     const sql = db();
     const internalLedgerId = ledgerIdToUuid(ledgerId);
     const value = parsed.value;
-    await sql`
-      INSERT INTO ledger_entries (id, ledger_id, kind, category, amount, entry_date, title, memo)
-      VALUES (${crypto.randomUUID()}, ${internalLedgerId}, ${value.kind}, ${value.category}, ${value.amount}, ${value.entryDate}, ${value.title}, ${value.memo})
-    `;
+    await sql.begin(async (transaction) => {
+      await transaction`
+        INSERT INTO ledger_entries (id, ledger_id, kind, category, amount, entry_date, title, memo)
+        VALUES (${crypto.randomUUID()}, ${internalLedgerId}, ${value.kind}, ${value.category}, ${value.amount}, ${value.entryDate}, ${value.title}, ${value.memo})
+      `;
+      await transaction.notify(LEDGER_CHANGES_CHANNEL, internalLedgerId);
+    });
     revalidatePath(`/${ledgerId}`);
     return { ok: true };
   } catch (error) {
@@ -45,14 +48,19 @@ export async function updateEntry(ledgerId: string, entryId: string, input: Entr
     const sql = db();
     const internalLedgerId = ledgerIdToUuid(ledgerId);
     const value = parsed.value;
-    const updated = await sql`
-      UPDATE ledger_entries
-      SET kind = ${value.kind}, category = ${value.category}, amount = ${value.amount},
-          entry_date = ${value.entryDate}, title = ${value.title}, memo = ${value.memo}, updated_at = now()
-      WHERE id = ${entryId} AND ledger_id = ${internalLedgerId}
-      RETURNING id
-    `;
+    const updated = await sql.begin(async (transaction) => {
+      const rows = await transaction`
+        UPDATE ledger_entries
+        SET kind = ${value.kind}, category = ${value.category}, amount = ${value.amount},
+            entry_date = ${value.entryDate}, title = ${value.title}, memo = ${value.memo}, updated_at = now()
+        WHERE id = ${entryId} AND ledger_id = ${internalLedgerId}
+        RETURNING id
+      `;
+      if (rows.length) await transaction.notify(LEDGER_CHANGES_CHANNEL, internalLedgerId);
+      return rows;
+    });
     if (!updated.length) return { ok: false, message: "수정할 거래를 찾지 못했습니다." };
+    await sql.notify(LEDGER_CHANGES_CHANNEL, internalLedgerId);
     revalidatePath(`/${ledgerId}`);
     return { ok: true };
   } catch (error) {
@@ -68,10 +76,15 @@ export async function deleteEntry(ledgerId: string, entryId: string): Promise<Ac
   try {
     const sql = db();
     const internalLedgerId = ledgerIdToUuid(ledgerId);
-    const deleted = await sql`
-      DELETE FROM ledger_entries WHERE id = ${entryId} AND ledger_id = ${internalLedgerId} RETURNING id
-    `;
+    const deleted = await sql.begin(async (transaction) => {
+      const rows = await transaction`
+        DELETE FROM ledger_entries WHERE id = ${entryId} AND ledger_id = ${internalLedgerId} RETURNING id
+      `;
+      if (rows.length) await transaction.notify(LEDGER_CHANGES_CHANNEL, internalLedgerId);
+      return rows;
+    });
     if (!deleted.length) return { ok: false, message: "삭제할 거래를 찾지 못했습니다." };
+    await sql.notify(LEDGER_CHANGES_CHANNEL, internalLedgerId);
     revalidatePath(`/${ledgerId}`);
     return { ok: true };
   } catch (error) {
