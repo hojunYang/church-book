@@ -201,7 +201,7 @@ export function LedgerView({ ledgerId, month, previousMonth, nextMonth, entries,
         </div>
         <div className="summary-grid">
           <div><span>이월금</span><strong>{formatWon(summary.carryover)}</strong></div>
-          <div className="income"><span>수입</span><strong>+{formatWon(summary.income)}</strong></div>
+          <div className="income"><span>지급</span><strong>+{formatWon(summary.income)}</strong></div>
           <div className="expense"><span>지출</span><strong>−{formatWon(summary.expense)}</strong></div>
         </div>
       </section>
@@ -237,7 +237,7 @@ export function LedgerView({ ledgerId, month, previousMonth, nextMonth, entries,
           <div className="empty-state">
             <span aria-hidden="true"><WalletCards /></span>
             <h2>아직 거래가 없어요</h2>
-            <p>오른쪽 아래 + 버튼을 눌러<br />첫 수입이나 지출을 기록해 보세요.</p>
+            <p>오른쪽 아래 + 버튼을 눌러<br />첫 지급이나 지출을 기록해 보세요.</p>
           </div>
         )}
       </section>
@@ -295,7 +295,7 @@ export function LedgerView({ ledgerId, month, previousMonth, nextMonth, entries,
             {(["expense", "income"] as const).map((kind) => (
               <label key={kind} className={draft.kind === kind ? "selected" : ""}>
                 <input type="radio" name="kind" checked={draft.kind === kind} onChange={() => changeKind(kind)} />
-                {kind === "expense" ? "지출" : "수입"}
+                {kind === "expense" ? "지출" : "지급"}
               </label>
             ))}
           </fieldset>

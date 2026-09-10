@@ -110,7 +110,7 @@ export function validateEntryDraft(input: unknown):
   const title = String(draft.title ?? "").trim();
   const memo = String(draft.memo ?? "").trim();
 
-  if (kind !== "income" && kind !== "expense") return { ok: false, message: "수입 또는 지출을 선택해 주세요." };
+  if (kind !== "income" && kind !== "expense") return { ok: false, message: "지급 또는 지출을 선택해 주세요." };
 
   const allowed = kind === "income" ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
   if (!allowed.some((item) => item.value === category)) return { ok: false, message: "카테고리를 확인해 주세요." };
