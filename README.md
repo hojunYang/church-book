@@ -17,12 +17,15 @@ ID는 영문 소문자, 숫자, 하이픈만 사용해 3~40자로 입력합니�
 
 여러 사용자가 접속하면 PostgreSQL `LISTEN / NOTIFY`와 SSE를 통해 거래 변경이 즉시 반영됩니다.
 
+한 번이라도 접속한 장부는 등록되며, 매월 1일에 수입 `월 지급금` 50,000원이 한 번만 자동 추가됩니다. 새 장부는 처음 접속한 달의 지급금을 즉시 받습니다.
+
 ## 명령어
 
 ```bash
 npm test
 npm run typecheck
 npm run build
+npm run grant
 ```
 
 PostgreSQL 격리 테스트는 운영 DB와 분리된 `TEST_DATABASE_URL`이 있을 때만 실행됩니다.

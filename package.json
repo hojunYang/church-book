@@ -8,7 +8,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs"
+    "migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
+    "grant": "node --env-file-if-exists=.env.local scripts/monthly-grant.mjs"
   },
   "dependencies": {
     "lucide-react": "latest",

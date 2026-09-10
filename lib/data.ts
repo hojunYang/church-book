@@ -23,6 +23,15 @@ export async function getLedgerMonth(ledgerId: string, month: string) {
   nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
   const monthEnd = nextMonth.toISOString().slice(0, 10);
 
+  await sql.begin(async (transaction) => {
+    await transaction`
+      INSERT INTO ledger_books (id, slug)
+      VALUES (${internalLedgerId}, ${ledgerId})
+      ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug
+    `;
+    await transaction`SELECT grant_monthly_allowance(${internalLedgerId})`;
+  });
+
   const [rawTotals, rawEntries] = await Promise.all([
     sql<RawTotal[]>`
       SELECT

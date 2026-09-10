@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import postgres from "postgres";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -7,11 +7,13 @@ const run = url ? describe : describe.skip;
 const sql = url ? postgres(url, { max: 1 }) : null;
 const ledgerA = crypto.randomUUID();
 const ledgerB = crypto.randomUUID();
+const ledgerC = crypto.randomUUID();
 
 run("PostgreSQL ledger isolation", () => {
   beforeAll(async () => {
-    const migration = await readFile(new URL("../db/migrations/001_init.sql", import.meta.url), "utf8");
-    await sql!.unsafe(migration);
+    const directory = new URL("../db/migrations/", import.meta.url);
+    const migrations = (await readdir(directory)).filter((file) => file.endsWith(".sql")).sort();
+    for (const file of migrations) await sql!.unsafe(await readFile(new URL(file, directory), "utf8"));
     await sql!`
       INSERT INTO ledger_entries (id, ledger_id, kind, category, amount, entry_date, title)
       VALUES
@@ -21,7 +23,8 @@ run("PostgreSQL ledger isolation", () => {
   });
 
   afterAll(async () => {
-    await sql!`DELETE FROM ledger_entries WHERE ledger_id IN (${ledgerA}, ${ledgerB})`;
+    await sql!`DELETE FROM ledger_entries WHERE ledger_id IN (${ledgerA}, ${ledgerB}, ${ledgerC})`;
+    await sql!`DELETE FROM ledger_books WHERE id IN (${ledgerA}, ${ledgerB}, ${ledgerC})`;
     await sql!.end();
   });
 
@@ -45,5 +48,31 @@ run("PostgreSQL ledger isolation", () => {
     `;
     expect(changed).toHaveLength(0);
     expect(deleted).toHaveLength(0);
+  });
+
+  it("빈 장부에도 월 지급금을 한 번만 추가한다", async () => {
+    await sql!`
+      INSERT INTO ledger_books (id, slug)
+      VALUES (${ledgerC}, ${`test-${ledgerC.slice(0, 8)}`})
+    `;
+
+    const [first] = await sql!`SELECT grant_monthly_allowance(${ledgerC}) AS count`;
+    const [second] = await sql!`SELECT grant_monthly_allowance(${ledgerC}) AS count`;
+    const entries = await sql!`
+      SELECT kind, category, amount::int, title,
+             to_char(entry_date, 'YYYY-MM') = to_char(CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul', 'YYYY-MM') AS current_month
+      FROM ledger_entries
+      WHERE ledger_id = ${ledgerC}
+    `;
+
+    expect(first.count).toBe(1);
+    expect(second.count).toBe(0);
+    expect(entries).toEqual([{
+      kind: "income",
+      category: "allowance",
+      amount: 50_000,
+      title: "월 지급금",
+      current_month: true,
+    }]);
   });
 });

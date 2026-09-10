@@ -1,5 +1,6 @@
 services:
   app:
+    image: church-book-app
     build: .
     restart: unless-stopped
     depends_on:
@@ -24,6 +25,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  grant-worker:
+    image: church-book-app
+    restart: unless-stopped
+    command: node scripts/monthly-grant.mjs --watch
+    depends_on:
+      - app
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-church_book}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@db:5432/${POSTGRES_DB:-church_book}
 
   cloudflared:
     image: cloudflare/cloudflared:latest
