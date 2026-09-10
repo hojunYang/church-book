@@ -45,7 +45,7 @@ describe("calculateMonthSummary", () => {
 });
 
 describe("validateEntryDraft", () => {
-  const valid = { kind: "expense", category: "food", amount: "12000", entryDate: "2026-09-09", title: "점심", memo: "" };
+  const valid = { kind: "expense", category: "meal", amount: "12000", entryDate: "2026-09-09", title: "점심", memo: "" };
 
   it("올바른 거래 입력을 정규화한다", () => {
     expect(validateEntryDraft(valid)).toEqual({ ok: true, value: { ...valid, amount: 12000, memo: null } });
@@ -53,6 +53,13 @@ describe("validateEntryDraft", () => {
 
   it("유형과 맞지 않는 카테고리를 거부한다", () => {
     expect(validateEntryDraft({ ...valid, kind: "income" })).toMatchObject({ ok: false });
+  });
+
+  it("새 카테고리만 허용한다", () => {
+    expect(validateEntryDraft({ ...valid, category: "cafe" })).toMatchObject({ ok: true });
+    expect(validateEntryDraft({ ...valid, kind: "income", category: "special_payment" })).toMatchObject({ ok: true });
+    expect(validateEntryDraft({ ...valid, category: "food" })).toMatchObject({ ok: false });
+    expect(validateEntryDraft({ ...valid, kind: "income", category: "salary" })).toMatchObject({ ok: false });
   });
 
   it("0원, 비정상 날짜, 너무 긴 내용을 거부한다", () => {

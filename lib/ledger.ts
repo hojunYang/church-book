@@ -1,17 +1,13 @@
 export const INCOME_CATEGORIES = [
-  { value: "salary", label: "급여" },
-  { value: "allowance", label: "용돈" },
-  { value: "refund", label: "환급" },
+  { value: "regular_payment", label: "정기 지급" },
+  { value: "special_payment", label: "특별 지급" },
   { value: "other", label: "기타" },
 ] as const;
 
 export const EXPENSE_CATEGORIES = [
-  { value: "food", label: "식비" },
+  { value: "meal", label: "식사" },
+  { value: "cafe", label: "카페" },
   { value: "transport", label: "교통" },
-  { value: "shopping", label: "쇼핑" },
-  { value: "housing", label: "주거" },
-  { value: "health", label: "건강" },
-  { value: "leisure", label: "여가" },
   { value: "other", label: "기타" },
 ] as const;
 

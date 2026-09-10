@@ -9,13 +9,9 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleEllipsis,
-  Gamepad2,
+  Coffee,
   Gift,
-  HeartPulse,
-  House,
   Plus,
-  RotateCcw,
-  ShoppingBag,
   Trash2,
   Utensils,
   WalletCards,
@@ -36,15 +32,11 @@ import {
 } from "@/lib/ledger";
 
 const ICONS: Record<Category, LucideIcon> = {
-  salary: Banknote,
-  allowance: Gift,
-  refund: RotateCcw,
-  food: Utensils,
+  regular_payment: Banknote,
+  special_payment: Gift,
+  meal: Utensils,
+  cafe: Coffee,
   transport: BusFront,
-  shopping: ShoppingBag,
-  housing: House,
-  health: HeartPulse,
-  leisure: Gamepad2,
   other: CircleEllipsis,
 };
 
@@ -73,7 +65,7 @@ function initialDate(month: string) {
 }
 
 function emptyDraft(month: string): EntryDraft {
-  return { kind: "expense", category: "food", amount: "", entryDate: initialDate(month), title: "", memo: "" };
+  return { kind: "expense", category: "meal", amount: "", entryDate: initialDate(month), title: "", memo: "" };
 }
 
 function draftFromEntry(entry: Entry): EntryDraft {
@@ -154,7 +146,7 @@ export function LedgerView({ ledgerId, month, previousMonth, nextMonth, entries,
     setDraft((current) => ({
       ...current,
       kind,
-      category: kind === "income" ? "salary" : "food",
+      category: kind === "income" ? "regular_payment" : "meal",
     }));
   }
 

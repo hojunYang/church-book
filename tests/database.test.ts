@@ -17,8 +17,8 @@ run("PostgreSQL ledger isolation", () => {
     await sql!`
       INSERT INTO ledger_entries (id, ledger_id, kind, category, amount, entry_date, title)
       VALUES
-        (${crypto.randomUUID()}, ${ledgerA}, 'expense', 'food', 1000, '2026-09-09', 'A 거래'),
-        (${crypto.randomUUID()}, ${ledgerB}, 'income', 'salary', 5000, '2026-09-09', 'B 거래')
+        (${crypto.randomUUID()}, ${ledgerA}, 'expense', 'meal', 1000, '2026-09-09', 'A 거래'),
+        (${crypto.randomUUID()}, ${ledgerB}, 'income', 'regular_payment', 5000, '2026-09-09', 'B 거래')
     `;
   });
 
@@ -69,7 +69,7 @@ run("PostgreSQL ledger isolation", () => {
     expect(second.count).toBe(0);
     expect(entries).toEqual([{
       kind: "income",
-      category: "allowance",
+      category: "regular_payment",
       amount: 50_000,
       title: "월 지급금",
       current_month: true,
